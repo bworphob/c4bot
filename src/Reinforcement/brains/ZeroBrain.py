@@ -1,0 +1,109 @@
+import os
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import Adam
+from .BrainComponent import build_architecture
+
+class ZeroBrain:
+    def __init__(self, iteration):
+        self.iteration = iteration
+        # self.model_path = f'Models/model_v{iteration}.keras'
+        self.model_path = f'Reinforcement/Models/model_v{iteration}.keras'
+
+        
+        model_dir = os.path.dirname(self.model_path)
+        if not os.path.exists(model_dir):
+            print(f"Creating directory: {model_dir}")
+            os.makedirs(model_dir, exist_ok=True)
+        
+        
+        
+        if os.path.exists(self.model_path):
+            print(f"Loading existing model: {self.model_path}")
+            self.model = load_model(self.model_path)
+        else:
+            print("Building new model from scratch...")
+            self.model = self.setup_model()
+            
+        
+        self.predict_function = tf.function(self.model)
+
+    def setup_model(self):
+        """ประกอบร่างสมองและตั้งค่าการเรียนรู้"""
+       
+        inputs, policy, value = build_architecture(res_blocks=7)
+        
+        
+        model = Model(inputs=inputs, outputs=[policy, value])
+        
+        
+        model.compile(
+            loss={
+                'policy_head': 'categorical_crossentropy', # Crossentropy for policy head to predict move probabilities
+                'value_head': 'mean_squared_error'        # MSE for value head to predict win/loss probability
+            },
+            loss_weights={
+                'policy_head': 0.5, 
+                'value_head': 0.5
+            },
+            optimizer=Adam(learning_rate=0.001) # ปรับจูนความเร็วการเรียนรู้
+        )
+        # model.summary()
+        # model.compile(loss={'value_head': 'mean_squared_error', 'policy_head': 'categorical_crossentropy'},
+        #               loss_weights={'value_head': 0.5, 'policy_head': 0.5},
+        #               optimizer=Adam(),run_eagerly=False,steps_per_execution = 100)
+        # model.summary()
+        return model
+
+    def predict(self, board_state):
+        """รับกระดาน (3, 6, 7) แล้วทายผลออกเป็น (โอกาสเลือกช่อง, โอกาสชนะ)"""
+        # preprae input data by reshaping
+        input_data = board_state.reshape((1, 3, 6, 7)).astype(np.float32)
+        
+        policy, value = self.predict_function(input_data, training=False)
+        
+        return policy.numpy()[0], value.numpy()[0][0]
+
+    def train(self, memory_batch):
+       
+        states, target_policies, target_values = list(zip(*memory_batch))
+        
+        S = np.array(states)
+        P = np.array(target_policies)
+        V = np.array(target_values)
+        
+        self.model.fit(
+            x=S, 
+            y={'policy_head': P, 'value_head': V}, 
+            batch_size=32, 
+            epochs=2, 
+            verbose=2
+        )
+        # update predict function after training
+        self.predict_function = tf.function(self.model)
+
+    # def save_model(self):
+    #     """บันทึกสมองเก็บไว้ในตำแหน่งที่ตั้งไว้ใน model_path"""
+    #     # หาชื่อโฟลเดอร์จาก path ที่ตั้งไว้ตอน __init__ (จะได้ 'Reinforcement/Models')
+    #     model_dir = os.path.dirname(self.model_path)
+    #     if not os.path.exists(model_dir):
+    #         os.makedirs(model_dir, exist_ok=True)
+            
+    #     # บันทึกลงไปยัง Path ที่ถูกต้อง (Reinforcement/Models/model_vX.keras)
+    #     self.model.save(self.model_path)
+    #     print(f"Model successfully saved to: {self.model_path}")
+
+    def save_model(self):
+        """บันทึกสมองเก็บไว้ในตำแหน่งที่ตั้งไว้ใน model_path"""
+        
+        actual_path = f'Reinforcement/Models/model_v{self.iteration}.keras'
+        
+        model_dir = os.path.dirname(actual_path)
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir, exist_ok=True)
+            
+        self.model.save(actual_path)
+        
+        self.model_path = actual_path
+        print(f"Model successfully saved to: {actual_path}")

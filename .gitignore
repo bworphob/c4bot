@@ -4,3 +4,6 @@
 myenv/
 datasets/
 Models/
+*.jpg
+*.png
+pipeline_debug/

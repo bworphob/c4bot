@@ -35,19 +35,38 @@ class Connect4Board:
         print("-" * 29)
         print("="*29 + "\n")
 
-    def getStateAsPlayer(self):
-        CH1 = np.zeros((6,7),dtype=np.int8) 
-        CH1[self.board == 1] = 1
-        CH2 = np.zeros((6,7),dtype=np.int8)
-        CH2[self.board == 2] = 1
+    # def getStateAsPlayer(self):
+    #     CH1 = np.zeros((6,7),dtype=np.int8) 
+    #     CH1[self.board == 1] = 1
+    #     CH2 = np.zeros((6,7),dtype=np.int8)
+    #     CH2[self.board == 2] = 1
         
         
-        CH3 = np.zeros((6,7),dtype=np.int8)
-        if self.current_turn == 2:
-            CH3 = np.ones((6,7),dtype=np.int8)
+    #     CH3 = np.zeros((6,7),dtype=np.int8)
+    #     if self.current_turn == 2:
+    #         CH3 = np.ones((6,7),dtype=np.int8)
             
-        board_stack = np.stack((CH1, CH2, CH3), axis=0)
-        return board_stack
+    #     board_stack = np.stack((CH1, CH2, CH3), axis=0)
+    #     return board_stack
+    
+    def getStateAsPlayer(self):
+        me = self.current_turn
+        opp = 1 if me == 2 else 2
+
+        # Layer 0: หมากของผู้เล่นปัจจุบัน (คนที่กำลังจะเดิน)
+        CH1 = np.zeros((6,7), dtype=np.float32) 
+        CH1[self.board == me] = 1.0
+    
+        # Layer 1: หมากของคู่ต่อสู้
+        CH2 = np.zeros((6,7), dtype=np.float32)
+        CH2[self.board == opp] = 1.0
+    
+        # Layer 2: ตัวบอกตาเดิน (Turn Indicator)
+        CH3 = np.zeros((6,7), dtype=np.float32)
+        if me == 2: # ถ้าเป็นตา AI (Player 2) ให้ส่งสัญญาณ One-hot
+            CH3 = np.ones((6,7), dtype=np.float32)
+        
+        return np.stack((CH1, CH2, CH3), axis=0)
 
     def topRowInColumn(self, col):
         if col > 6 or col < 0:

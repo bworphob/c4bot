@@ -21,7 +21,7 @@ class Image_Processing:
         self.kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20, 20))
         
     def capture(self):
-        cap = cv2.VideoCapture(4)
+        cap = cv2.VideoCapture(0)
         # warm up
         for _ in range(20):
             ret, frame = cap.read()

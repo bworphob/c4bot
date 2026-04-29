@@ -5,7 +5,8 @@ class GPIO_Module:
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)  
         self.push_button_pin = 13  
-        self.led_pins = [16, 18, 22, 29, 31, 36, 37]
+        # self.led_pins = [16, 18, 22, 29, 31, 36, 37]
+        self.led_pins = [12, 15, 16, 18, 19, 21, 22]  
 
         GPIO.setup(self.push_button_pin, GPIO.IN)
         GPIO.setup(self.led_pins, GPIO.OUT)

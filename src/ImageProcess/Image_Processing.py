@@ -1,6 +1,7 @@
 import cv2
 import time
 import numpy as np
+import os
 
 
 
@@ -110,3 +111,55 @@ class Image_Processing:
                     board_matrix[r, c] = 0 # Empty
 
         return board_matrix
+
+    def save_pipeline_images(self, output_dir="pipeline_debug", example_row=0, example_col=0):
+        """
+        Capture one frame and save intermediate images at each pipeline stage:
+          1. original.jpg         — raw captured frame
+          2. perspective.jpg      — after perspective warp
+          3. blurred.jpg          — after average blur
+          4. hsv.jpg              — HSV colorspace (saved as BGR so colors show HSV data visually)
+          5. morph_yellow.jpg     — yellow mask after morphological closing (example slot)
+          6. morph_red.jpg        — red mask after morphological closing (example slot)
+        """
+        os.makedirs(output_dir, exist_ok=True)
+
+        # 1. Original
+        raw_frame = self.capture()
+        if raw_frame is None:
+            print("Capture failed.")
+            return
+        cv2.imwrite(os.path.join(output_dir, "1_original.jpg"), raw_frame)
+        print(f"Saved: 1_original.jpg")
+
+        # 2. Perspective transform
+        M = cv2.getPerspectiveTransform(self.src_pts, self.dest_pts)
+        warped = cv2.warpPerspective(raw_frame, M, (self.width, self.height))
+        cv2.imwrite(os.path.join(output_dir, "2_perspective.jpg"), warped)
+        print(f"Saved: 2_perspective.jpg")
+
+        # 3. Blur (average filter)
+        blurred = cv2.blur(warped, (12, 12))
+        cv2.imwrite(os.path.join(output_dir, "3_blurred.jpg"), blurred)
+        print(f"Saved: 3_blurred.jpg")
+
+        # 4. HSV colorspace — convert back to BGR for a viewable save
+        hsv_frame = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        cv2.imwrite(os.path.join(output_dir, "4_hsv.jpg"), cv2.cvtColor(hsv_frame, cv2.COLOR_HSV2BGR))
+        print(f"Saved: 4_hsv.jpg")
+
+        # 5 & 6. Morphological closing on an example slot
+        slot = self.get_slot(hsv_frame, example_row, example_col)
+
+        mask_y = cv2.inRange(slot, self.yellow_low, self.yellow_up)
+        mask_r = cv2.inRange(slot, self.red_low, self.red_up)
+
+        morph_y = cv2.morphologyEx(mask_y, cv2.MORPH_CLOSE, self.kernel)
+        morph_r = cv2.morphologyEx(mask_r, cv2.MORPH_CLOSE, self.kernel)
+
+        cv2.imwrite(os.path.join(output_dir, f"5_morph_yellow_r{example_row}c{example_col}.jpg"), morph_y)
+        cv2.imwrite(os.path.join(output_dir, f"5_morph_red_r{example_row}c{example_col}.jpg"), morph_r)
+        print(f"Saved: 5_morph_yellow_r{example_row}c{example_col}.jpg")
+        print(f"Saved: 5_morph_red_r{example_row}c{example_col}.jpg")
+
+        print(f"\nAll pipeline images saved to: {os.path.abspath(output_dir)}")

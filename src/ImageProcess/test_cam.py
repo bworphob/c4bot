@@ -1,53 +1,41 @@
-import cv2
-import numpy as np
+# -*- coding: utf-8 -*-
 import os
 import sys
+import numpy as np
 
-# แทรก Path
+# แทรก Path เพื่อให้เรียกใช้ Module ใน src ได้ (เผื่อรันจาก Root ของโปรเจกต์)
+# os.getcwd() จะคืนค่า /home/bworphob/c4bot
 sys.path.append(os.path.join(os.getcwd(), 'src'))
+
 from ImageProcess.Image_Processing import Image_Processing
 
 def main():
+    # 1. เริ่มต้นระบบ Vision
     img_proc = Image_Processing()
     
-    print("Capturing image...")
-    raw_frame = img_proc.capture()
-    if raw_frame is None:
-        print("Error: Cannot capture image from camera (check index)")
-        return
-
-    # 1. ภาพหลังทำ Perspective Transform
-    M = cv2.getPerspectiveTransform(img_proc.src_pts, img_proc.dest_pts)
-    warped = cv2.warpPerspective(raw_frame, M, (img_proc.width, img_proc.height))
-    cv2.imwrite('debug_1_warped.jpg', warped)
-
-    # 2. ภาพหลัง Blur
-    blurred = cv2.blur(warped, (12, 12))
-    cv2.imwrite('debug_2_blurred.jpg', blurred)
-
-    # 3. ภาพหลัง Convert to HSV
-    hsv_frame = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-    # หมายเหตุ: ภาพ HSV จะดูสีเพี้ยนๆ เมื่อเซฟเป็น JPG เป็นเรื่องปกติครับ
-    cv2.imwrite('debug_3_hsv.jpg', hsv_frame)
-
-    # 4. ภาพหลังทำ Morphological (ดึงมา 1 ช่องเพื่อเทส)
-    # ทดลองสแกนทั้งบอร์ดแล้วเซฟ Mask ของช่องแรกที่มีหมาก
-    mask_yellow_full = cv2.inRange(hsv_frame, img_proc.yellow_low, img_proc.yellow_up)
-    mask_red_full = cv2.inRange(hsv_frame, img_proc.red_low, img_proc.red_up)
+    print("--- C4BOT Camera Pipeline & Scan Test ---")
     
-    # ทำ Morphological Close
-    morphed_y = cv2.morphologyEx(mask_yellow_full, cv2.MORPH_CLOSE, img_proc.kernel)
-    morphed_r = cv2.morphologyEx(mask_red_full, cv2.MORPH_CLOSE, img_proc.kernel)
+    # 2. รันการบันทึกภาพในแต่ละ Stage (ฟังก์ชันที่เพื่อนเพิ่มมา)
+    # มันจะสร้างโฟลเดอร์ pipeline_debug/ ให้เอง
+    # ลองสแกนแถว 5 (ล่างสุด) คอลัมน์ 0 (ซ้ายสุด) เพื่อดูผลลัพธ์หมากตัวอย่าง
+    print("\n[Stage 1] Saving pipeline images for debugging...")
+    img_proc.save_pipeline_images(output_dir="pipeline_debug", example_row=5, example_col=0)
     
-    cv2.imwrite('debug_4_mask_yellow.jpg', morphed_y)
-    cv2.imwrite('debug_4_mask_red.jpg', morphed_r)
-
-    print("Debug images saved: debug_1 to debug_4")
-    
-    # ทดสอบ Scan Board ออกมาเป็น Matrix
+    # 3. ทดสอบการ Scan Board จริงๆ ออกมาเป็น Matrix
+    print("\n[Stage 2] Scanning current board state...")
     matrix = img_proc.scan_board()
-    print("\nScanned Board Matrix:")
+    
+    print("\n" + "="*30)
+    print(" SCANNED BOARD MATRIX")
+    print(" (0:Empty, 1:Yellow, 2:Red)")
+    print("="*30)
     print(matrix)
+    print("="*30)
+
+    print("\nNext Steps:")
+    print("1. Open 'http://<JETSON_IP>:8000/pipeline_debug' in your browser.")
+    print("2. Check '2_perspective.jpg' to see if the board is aligned.")
+    print("3. Check '5_morph_yellow/red' to see if coins are detected clearly.")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,11 @@
+.vscode/
+code/
+**/__pycache__/
+*.py[cod]
+myenv/
+datasets/
+Models/
+pipeline_debug/
+*.jpg
+*.png
+*.pickle

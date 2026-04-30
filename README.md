@@ -4,8 +4,6 @@ This project focuses on studying AI for playing Connect4 using Reinforcement Lea
 
 ```
 c4bot/
-├── .vscode/
-├── myenv/
 ├── src/
 │   ├── GameBoard/ 
 │   ├── GPIO/

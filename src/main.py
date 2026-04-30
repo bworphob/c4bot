@@ -4,7 +4,6 @@ import numpy as np
 import time
 
 os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
-
 # sys.path.append(os.path.join(os.getcwd(), 'src'))
 # --- ปรับปรุงส่วนนี้เพื่อให้รันได้ทั้งในและนอก src ---
 # หาตำแหน่งของไฟล์นี้
@@ -31,13 +30,27 @@ from luma.oled.device import sh1106
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 
-def update_oled(device, title, msg, col=None):
+# def update_oled(device, title, msg, col=None):
+#     with canvas(device) as draw:
+#         draw.text((5, 5), title, fill="white")
+#         draw.text((5, 20), msg, fill="white")
+        
+#         if col is not None:
+#             draw.rectangle((40, 35, 80, 60), outline="white")
+#             draw.text((48, 42), "C{}".format(col), fill="white")
+
+def update_oled(device, title, msg, col=None, win_chance=None):
     with canvas(device) as draw:
         draw.text((5, 5), title, fill="white")
         draw.text((5, 20), msg, fill="white")
+        
+        # ถ้ามีค่าโอกาสชนะ ให้แสดงเป็น % ที่มุมขวาล่าง
+        if win_chance is not None:
+            draw.text((5, 45), f"AI Win: {win_chance:.1f}%", fill="white")
+            
         if col is not None:
-            draw.rectangle((40, 35, 80, 60), outline="white")
-            draw.text((48, 42), "C{}".format(col), fill="white")
+            draw.rectangle((85, 35, 120, 60), outline="white") # ขยับกรอบหลบตัวเลข
+            draw.text((93, 42), "C{}".format(col), fill="white")
 
 # def run_main():
 #     # 1. Setup All Modules
@@ -197,16 +210,21 @@ def run_main():
             else: # AI turn
                 print("\n>>> AI THINKING...")
                 update_oled(device, "AI THINKING...", "Processing...")
-                policy = ai_brain.predict(game)
+                # policy = ai_brain.predict(game)
+                policy, value = ai_brain.predict(game)####
+                ai_win_percent = (1 - value) / 2 * 100####
                 valid_actions = game.validAction()
                 
                 masked_policy = np.full(policy.shape, -np.inf)
                 masked_policy[valid_actions] = policy[valid_actions]
                 move = int(np.argmax(masked_policy))
                 
-                print("AI SUGGESTS: Column {}".format(move))
+                print(f"AI Win Chance: {ai_win_percent:.1f}%")####
+                # hw.on_led(move)####
+                # print("AI SUGGESTS: Column {}".format(move))
+                update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move, win_chance=ai_win_percent)
                 hw.on_led(move) 
-                update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
+                # update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
                 
                 hw.wait_push()
                 hw.off_all_led()

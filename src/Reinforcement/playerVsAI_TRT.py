@@ -118,12 +118,18 @@ class TRTBrainWrapper:
         res1 = self.outputs[1]['host'] if len(self.outputs) > 1 else res0
     
     # 7. if output = 7 -> policy, else value
+        # if len(res0) == 7:
+        #     policy = res0
+        # else:
+        #     policy = res1
         if len(res0) == 7:
             policy = res0
+            value = res1[0] if res1 is not None else 0
         else:
-            policy = res1
+            policy = res1 if res1 is not None else res0
+            value = res0[0]
 
-        return policy
+        return policy, value
 
 def play():
     print("Loading TensorRT Engine (Optimized for Jetson Nano) ...")
@@ -156,7 +162,8 @@ def play():
                 continue
         else:
             print("AI (TensorRT) is thinking...")
-            policy = zero_ai.predict(board)
+            # policy = zero_ai.predict(board)
+            policy, value = zero_ai.predict(board)
             valid_actions = board.validAction()
             
             masked_policy = np.full(policy.shape, -np.inf)
@@ -164,7 +171,7 @@ def play():
             move = np.argmax(masked_policy)
             
             print(f"AI chose column: {move}")
-
+            print(f"AI Evaluation (Value): {value:.4f}")
         board.insertColumn(move)
 
     board.showBoard()

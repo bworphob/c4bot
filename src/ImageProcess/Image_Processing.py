@@ -8,18 +8,34 @@ import os
 class Image_Processing:
     def __init__(self):
         # Init color value (will be updated after execution calibration)
-        self.red_low = np.array([140, 110, 25])
+        # self.red_low = np.array([140, 110, 25])
+        self.red_low = np.array([130, 80, 20])
         self.red_up = np.array([180, 255, 255])
         self.yellow_low = np.array([5, 20, 60])
         self.yellow_up = np.array([70, 200, 255])
 
         # Init image
-        self.src_pts = np.float32([[0, 21], [35, 463], [629, 20], [590, 465]])
+        # self.src_pts = np.float32([[0, 21], [35, 463], [629, 20], [590, 465]])
+        # self.src_pts = np.float32([[330, 80], [315,515], [930, 80], [930, 525]])
+        self.src_pts = np.float32([[330, 100], [315, 545], [930, 100], [930, 545]])
         self.width, self.height = 640, 480
         self.dest_pts = np.float32([[0, 0], [0, self.height], [self.width, 0], [self.width, self.height]])
 
         # Init kernel for morphological
         self.kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20, 20))
+
+        # get slot
+        # self.grid_x = [20, 105, 182, 273, 364, 455, 546, 640]
+        # self.grid_x = [10, 103, 182, 273, 364, 455, 546, 640]
+        # # self.grid_y = [15, 90, 165, 240, 315, 390, 465]
+        # self.grid_y = [0, 79, 165, 240, 315, 390, 465]
+
+        # self.grid_x = [2, 101, 189, 275, 363, 451, 538, 635]
+        # self.grid_y = [0, 78, 162, 248, 330, 414, 480]
+
+        self.grid_x = [9, 99, 188, 276, 362, 450, 537, 626]
+        self.grid_y = [0, 77, 161, 245, 329, 413, 480]
+        
         
     def capture(self):
         cap = cv2.VideoCapture(0)
@@ -31,7 +47,7 @@ class Image_Processing:
         cap.release()
 
         if ret_final:
-            cv2.imwrite('last_capture.jpg', frame)
+            # cv2.imwrite('last_capture.jpg', frame)
             return frame
         return None
     
@@ -42,11 +58,23 @@ class Image_Processing:
         blurred = cv2.blur(warped, (12, 12))
         return blurred
     
+    # def get_slot(self, hsv_img, row, col):
+    #     step_x = self.width // 7
+    #     step_y = self.height // 6
+    #     slot = hsv_img[row*step_y : (row+1)*step_y, col*step_x : (col+1)*step_x]
+    #     return slot
+
+
     def get_slot(self, hsv_img, row, col):
-        step_x = self.width // 7
-        step_y = self.height // 6
-        slot = hsv_img[row*step_y : (row+1)*step_y, col*step_x : (col+1)*step_x]
+   
+        y1, y2 = self.grid_y[row], self.grid_y[row+1]
+        x1, x2 = self.grid_x[col], self.grid_x[col+1]
+    
+        slot = hsv_img[y1:y2, x1:x2]
         return slot
+
+
+    
     
     def calibration(self):
         # Calibration process: capture image, pre-process it,
@@ -104,9 +132,9 @@ class Image_Processing:
 
                 # 3. The decision is based on the number of colored pixels found.
                 if np.sum(mask_y != 0) > 1000:
-                    board_matrix[r, c] = 1 # Player
+                    board_matrix[r, c] = 2 # Player
                 elif np.sum(mask_r != 0) > 1000:
-                    board_matrix[r, c] = 2 # AI
+                    board_matrix[r, c] = 1 # AI
                 else:
                     board_matrix[r, c] = 0 # Empty
 
@@ -145,7 +173,7 @@ class Image_Processing:
 
         # 4. HSV colorspace — convert back to BGR for a viewable save
         hsv_frame = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-        cv2.imwrite(os.path.join(output_dir, "4_hsv.jpg"), cv2.cvtColor(hsv_frame, cv2.COLOR_HSV2BGR))
+        cv2.imwrite(os.path.join(output_dir, "4_hsv.jpg"), hsv_frame)
         print(f"Saved: 4_hsv.jpg")
 
         # 5 & 6. Morphological closing on an example slot

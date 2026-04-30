@@ -25,7 +25,7 @@
 # def run_test():
 #     # 1. Setup Hardware & AI
 #     hw = GPIO_Module()
-#     engine_path = "src/Reinforcement/Models/model_v5.engine"
+#     engine_path = "src/Reinforcement/Models/model_v6.engine"
 #     ai_brain = TRTBrainWrapper(engine_path)
     
 #     # Setup OLED
@@ -93,7 +93,7 @@
 
 
 
-# -*- coding: utf-8 -*-
+
 import os
 import sys
 import numpy as np
@@ -121,14 +121,14 @@ def update_oled(device, title, msg, col=None):
 def run_test():
     # 1. Setup Hardware & AI
     hw = GPIO_Module()
-    engine_path = "src/Reinforcement/Models/model_v5.engine"
+    engine_path = "src/Reinforcement/Models/model_v8.engine"
     ai_brain = TRTBrainWrapper(engine_path)
     
     # Setup OLED (Bus 1, Address 0x3C)
     serial = i2c(port=1, address=0x3C)
     device = sh1106(serial)
 
-    # 2. เริ่มเกม
+    # 2. Start
     print("--- C4BOT Integration Test ---")
     try:
         first_p = int(input("Who starts first? (1: Human, 2: AI): "))
@@ -142,7 +142,7 @@ def run_test():
             game.showBoard()
             hw.off_all_led()
             
-            if game.current_turn == 1: # ตาเรา (Human)
+            if game.current_turn == 1: # Human
                 update_oled(device, "ROUND {}".format(game.round), "YOUR TURN\nInput & Push")
                 
                 success = False
@@ -157,14 +157,14 @@ def run_test():
                     except ValueError:
                         print("Please enter a number 0-6.")
                 
-                # หยอดเสร็จแล้วต้องกดปุ่มยืนยันเพื่อเปลี่ยนตา
+                # push to confirm move and switch turn
                 hw.wait_push() 
                 
-            else: # ตา AI
+            else: # AI
                 update_oled(device, "AI THINKING...", "Processing...")
                 print("AI is calculating...")
                 
-                # AI คำนวณ (ใช้ตัวที่แก้ใหม่แล้ว)
+                # AI calculates move
                 policy = ai_brain.predict(game)
                 valid_actions = game.validAction()
                 
@@ -172,12 +172,12 @@ def run_test():
                 masked_policy[valid_actions] = policy[valid_actions]
                 move = int(np.argmax(masked_policy))
                 
-                # แสดงผลทาง Hardware
+                # Display Hardware
                 print("AI RECOMMENDS: Column {}".format(move))
                 hw.on_led(move) 
                 update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
                 
-                # เราต้องพิมพ์ค่าให้ AI เพื่อให้ Logic ในเครื่องตรงกับบอร์ดจริง
+                # Wait for human to drop AI's coin and push to switch turn
                 success = False
                 while not success:
                     try:
@@ -190,11 +190,11 @@ def run_test():
                     except ValueError:
                         pass
                 
-                # รอเราหยอดให้ AI เสร็จแล้วกดปุ่มเพื่อดับไฟและเปลี่ยนตา
+                # push to confirm move and switch turn
                 hw.wait_push()
                 hw.off_all_led()
 
-        # จบเกม
+        # End
         game.showBoard()
         winner_text = "YOU WON!" if game.winner == 1 else "AI WON!"
         if game.winner == 0: winner_text = "DRAW!"

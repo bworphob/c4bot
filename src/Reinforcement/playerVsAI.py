@@ -3,16 +3,26 @@ import sys
 import numpy as np
 
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# from GameBoard.GameBoard import Connect4Board
+# from brains.ZeroBrain import ZeroBrain        
+# from players.ZeroPlayer import ZeroPlayer    
+
+
+current_file = os.path.abspath(__file__) 
+root_path = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+src_path = os.path.join(root_path, 'src')
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 from GameBoard.GameBoard import Connect4Board
-from brains.ZeroBrain import ZeroBrain        
-from players.ZeroPlayer import ZeroPlayer    
+from Reinforcement.brains.ZeroBrain import ZeroBrain        
+from Reinforcement.players.ZeroPlayer import ZeroPlayer
 
 def play():
     
     print("Loading AI Model ...")
-    zero_ai = ZeroBrain(5) 
+    zero_ai = ZeroBrain(8) 
     ai_player = ZeroPlayer(zero_ai)
     
     # setup game with human as player 1 and AI as player 2
@@ -38,14 +48,14 @@ def play():
         else:
             # AI move
             print("AI is thinking...")
-            # ใช้ tau=0 เพื่อให้ AI เลือกท่าที่มั่นใจที่สุด (Best Move) ไม่สุ่มเหมือนตอนเทรน
+            # tau=0 for deterministic move (best move), tau>0 for more exploration 
             move, policy = ai_player.act(board, tau=0)
             print(f"AI chose column: {move}")
-            # print(f"AI Confidence: {np.round(policy, 3)}") # เปิดเพื่อดูความมั่นใจในแต่ละช่อง
+            # print(f"AI Confidence: {np.round(policy, 3)}") # To see the confidence of each move (optional)
 
         board.insertColumn(move)
 
-    # จบเกม
+    # End
     board.showBoard()
     if board.winner == 0:
         print("\n--- Game Over: DRAW! ---")

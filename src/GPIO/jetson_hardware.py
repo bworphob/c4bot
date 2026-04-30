@@ -33,9 +33,26 @@ class GPIO_Module:
         GPIO.output(self.led_pins[col_index], GPIO.LOW) # Action: off LED
         print(f"LED at column {col_index} (Pin {self.led_pins[col_index]}) is OFF")
 
-    def show_winner(self,winner):
+    # def show_winner(self,winner):
+    #     self.off_all_led()
+    #     # LED 0 = Player 1, LED 6 = Player 2, LED 3 = Draw
+    #     if winner == 1:
+    #         blink_pin = self.led_pins[0]
+    #     elif winner == 2:
+    #         blink_pin = self.led_pins[6]
+    #     else:
+    #         blink_pin = self.led_pins[3]
+        
+    #     # self.on_all_led()
+    #     for i in range(20): 
+    #         GPIO.output(blink_pin, GPIO.HIGH)
+    #         time.sleep(0.5)
+    #         GPIO.output(blink_pin, GPIO.LOW)
+    #         time.sleep(0.5)
+
+    def show_winner(self, winner):
         self.off_all_led()
-        # LED 0 = Player 1, LED 6 = Player 2, LED 3 = Draw
+        
         if winner == 1:
             blink_pin = self.led_pins[0]
         elif winner == 2:
@@ -43,12 +60,18 @@ class GPIO_Module:
         else:
             blink_pin = self.led_pins[3]
         
-        self.on_all_led()
         for i in range(20): 
+            
+            GPIO.output(self.led_pins, GPIO.LOW) 
+            
+            # เปิดเฉพาะดวงที่ชนะ
             GPIO.output(blink_pin, GPIO.HIGH)
-            time.sleep(1)
+            time.sleep(0.5)
+            
+            # ดับดวงที่ชนะ
             GPIO.output(blink_pin, GPIO.LOW)
-            time.sleep(1)
+            time.sleep(0.5)
+        
 
     def showConfirmButton(self):
         self.on_all_led()

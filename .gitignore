@@ -1,7 +1,10 @@
+# VS Code config
 .vscode/
 code/
+# Python Cache
 **/__pycache__/
 *.py[cod]
+#env
 myenv/
 datasets/
 Models/

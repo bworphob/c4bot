@@ -10,9 +10,9 @@ c4bot/
 │   ├── GameBoard/ 
 │   ├── GPIO/
 │   ├── ImageProcess/
-│   └── Reinforcement/
+│   ├── Reinforcement/
+│   └── main.py         
 ├── .gitignore
-├── main.py
 └── README.md
 ```
 
@@ -42,7 +42,7 @@ This step requires a TensorRT-enabled system such as Jetson or a PC with TensorR
 ### 4. Run full integration
 Run the main hardware integration entry point:
 ```bash
-sudo python3 main.py
+sudo python3 src/main.py
 ```
 This is the full system flow with camera, GPIO, OLED, and TensorRT inference.
 

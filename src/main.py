@@ -4,7 +4,24 @@ import numpy as np
 import time
 
 os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
-sys.path.append(os.path.join(os.getcwd(), 'src'))
+
+# sys.path.append(os.path.join(os.getcwd(), 'src'))
+# --- ปรับปรุงส่วนนี้เพื่อให้รันได้ทั้งในและนอก src ---
+# หาตำแหน่งของไฟล์นี้
+current_file_path = os.path.abspath(__file__)
+# หาตำแหน่งโฟลเดอร์ c4bot (Root)
+# ถ้าอยู่ใน src/ โฟลเดอร์หลักคือ dirname ของ dirname
+# ถ้าอยู่ Root โฟลเดอร์หลักคือ dirname
+base_dir = os.path.dirname(current_file_path)
+if os.path.basename(base_dir) == 'src':
+    base_dir = os.path.dirname(base_dir)
+
+src_path = os.path.join(base_dir, 'src')
+
+# เพิ่ม Path เข้าไปเพื่อให้ import module อื่นๆ เจอ
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+# ----------------------------------------------
 
 from GameBoard.GameBoard import Connect4Board
 from Reinforcement.playerVsAI_TRT import TRTBrainWrapper
@@ -125,7 +142,8 @@ def run_main():
     
     hw = GPIO_Module()
     vision = Image_Processing()
-    engine_path = "src/Reinforcement/Models/model_v8.engine"
+    # engine_path = "src/Reinforcement/Models/model_v8.engine"
+    engine_path = os.path.join(base_dir, "src/Reinforcement/Models/model_v8.engine")
     ai_brain = TRTBrainWrapper(engine_path)
     
     serial = i2c(port=1, address=0x3C)

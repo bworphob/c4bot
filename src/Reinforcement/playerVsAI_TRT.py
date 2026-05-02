@@ -134,7 +134,7 @@ class TRTBrainWrapper:
 def play():
     print("Loading TensorRT Engine (Optimized for Jetson Nano) ...")
     
-    model_path = os.path.join(reinforcement_dir, "Models", "model_v8.engine")
+    model_path = os.path.join(reinforcement_dir, "Models", "model_v4.engine")
     
     if not os.path.exists(model_path):
         print(f"Error: Engine file not found at {model_path}")
@@ -164,6 +164,11 @@ def play():
             print("AI (TensorRT) is thinking...")
             # policy = zero_ai.predict(board)
             policy, value = zero_ai.predict(board)
+
+            
+            ai_win_percent = (value + 1) / 2 * 100
+            print(f"AI Confidence: {ai_win_percent:.2f}%")
+
             valid_actions = board.validAction()
             
             masked_policy = np.full(policy.shape, -np.inf)

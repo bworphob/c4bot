@@ -22,7 +22,7 @@ from Reinforcement.players.ZeroPlayer import ZeroPlayer
 def play():
     
     print("Loading AI Model ...")
-    zero_ai = ZeroBrain(8) 
+    zero_ai = ZeroBrain(4) 
     ai_player = ZeroPlayer(zero_ai)
     
     # setup game with human as player 1 and AI as player 2

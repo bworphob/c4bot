@@ -1,6 +1,10 @@
 # connect4Bot
 
-This project focuses on studying AI for playing Connect4 using Reinforcement Learning and deploying it on Jetson. The structure of files are shown as follow. 
+This project focuses on studying AI for playing Connect4 using Reinforcement Learning and deploying it on Jetson Nano 2gb. 
+
+We are interetested in a reinforcement, so we decide to create a Connect4 AI player follow AlphaZero.
+
+The structure of project are shown as follow. 
 
 ```
 c4bot/
@@ -9,6 +13,7 @@ c4bot/
 │   ├── GPIO/
 │   ├── ImageProcess/
 │   ├── Reinforcement/
+│   ├── test_hardware_integration.py    
 │   └── main.py         
 ├── .gitignore
 └── README.md

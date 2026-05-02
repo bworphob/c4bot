@@ -156,7 +156,7 @@ def run_main():
     hw = GPIO_Module()
     vision = Image_Processing()
     # engine_path = "src/Reinforcement/Models/model_v8.engine"
-    engine_path = os.path.join(base_dir, "src/Reinforcement/Models/model_v8.engine")
+    engine_path = os.path.join(base_dir, "src/Reinforcement/Models/model_v4.engine")
     ai_brain = TRTBrainWrapper(engine_path)
     
     serial = i2c(port=1, address=0x3C)
@@ -212,7 +212,7 @@ def run_main():
                 update_oled(device, "AI THINKING...", "Processing...")
                 # policy = ai_brain.predict(game)
                 policy, value = ai_brain.predict(game)####
-                ai_win_percent = (1 - value) / 2 * 100####
+                ai_win_percent = (1 + value) / 2 * 100####
                 valid_actions = game.validAction()
                 
                 masked_policy = np.full(policy.shape, -np.inf)

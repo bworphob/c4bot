@@ -121,7 +121,7 @@ def update_oled(device, title, msg, col=None):
 def run_test():
     # 1. Setup Hardware & AI
     hw = GPIO_Module()
-    engine_path = "src/Reinforcement/Models/model_v8.engine"
+    engine_path = "src/Reinforcement/Models/model_v4.engine"
     ai_brain = TRTBrainWrapper(engine_path)
     
     # Setup OLED (Bus 1, Address 0x3C)
@@ -165,7 +165,9 @@ def run_test():
                 print("AI is calculating...")
                 
                 # AI calculates move
-                policy = ai_brain.predict(game)
+                # policy = ai_brain.predict(game)
+                policy, value = ai_brain.predict(game)
+                ai_win_percent = (value + 1) / 2 * 100
                 valid_actions = game.validAction()
                 
                 masked_policy = np.full(policy.shape, -np.inf)
@@ -174,6 +176,7 @@ def run_test():
                 
                 # Display Hardware
                 print("AI RECOMMENDS: Column {}".format(move))
+                print("AI Confidence: {:.2f}%".format(ai_win_percent))
                 hw.on_led(move) 
                 update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
                 

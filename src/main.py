@@ -29,6 +29,7 @@ from ImageProcess.Image_Processing import Image_Processing
 from luma.oled.device import sh1106
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
+from Reinforcement.players.ZeroPlayer import TRTPlayer
 
 # def update_oled(device, title, msg, col=None):
 #     with canvas(device) as draw:
@@ -158,6 +159,7 @@ def run_main():
     # engine_path = "src/Reinforcement/Models/model_v8.engine"
     engine_path = os.path.join(base_dir, "src/Reinforcement/Models/model_v4.engine")
     ai_brain = TRTBrainWrapper(engine_path)
+    ZeroAI = TRTPlayer(ai_brain, n_simulations=400) 
     
     serial = i2c(port=1, address=0x3C)
     device = sh1106(serial)
@@ -208,24 +210,62 @@ def run_main():
                 game.board = vision.scan_board()
                 next_turn = 2 
                 
+            # else: # AI turn
+            #     print("\n>>> AI THINKING...")
+            #     update_oled(device, "AI THINKING...", "Processing...")
+            #     # policy = ai_brain.predict(game)
+            #     policy, value = ai_brain.predict(game)####
+            #     ai_win_percent = (1 + value) / 2 * 100####
+            #     valid_actions = game.validAction()
+                
+            #     masked_policy = np.full(policy.shape, -np.inf)
+            #     masked_policy[valid_actions] = policy[valid_actions]
+            #     move = int(np.argmax(masked_policy))
+                
+            #     print(f"AI Win Chance: {ai_win_percent:.1f}%")####
+            #     # hw.on_led(move)####
+            #     # print("AI SUGGESTS: Column {}".format(move))
+            #     update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move, win_chance=ai_win_percent)
+            #     hw.on_led(move) 
+            #     # update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
+                
+            #     hw.wait_push()
+            #     hw.off_all_led()
+                
+            #     print("Scanning AI move...")
+            #     game.board = vision.scan_board()
+            #     next_turn = 1 
+            #     game.round += 1
+
             else: # AI turn
-                print("\n>>> AI THINKING...")
-                update_oled(device, "AI THINKING...", "Processing...")
-                # policy = ai_brain.predict(game)
-                policy, value = ai_brain.predict(game)####
-                ai_win_percent = (1 + value) / 2 * 100####
-                valid_actions = game.validAction()
+                # --- โค้ดเก่า (Direct Predict) ---
+                # print("\n>>> AI THINKING...")
+                # update_oled(device, "AI THINKING...", "Processing...")
+                # policy, value = ai_brain.predict(game)
+                # ai_win_percent = (1 + value) / 2 * 100
+                # valid_actions = game.validAction()
+                # masked_policy = np.full(policy.shape, -np.inf)
+                # masked_policy[valid_actions] = policy[valid_actions]
+                # move = int(np.argmax(masked_policy))
                 
-                masked_policy = np.full(policy.shape, -np.inf)
-                masked_policy[valid_actions] = policy[valid_actions]
-                move = int(np.argmax(masked_policy))
+                # --- โค้ดใหม่ (ใช้ MCTS ผ่าน TRTPlayer) ---
+                print("\n>>> AI THINKING (MCTS Search)...")
+                update_oled(device, "AI THINKING...", "MCTS Searching")
                 
-                print(f"AI Win Chance: {ai_win_percent:.1f}%")####
-                # hw.on_led(move)####
-                # print("AI SUGGESTS: Column {}".format(move))
+                # เรียกใช้ MCTS Search 400 รอบ (ZeroAI คืออินสแตนซ์ของ TRTPlayer)
+                move, mcts_policy = ZeroAI.act(game, tau=0) 
+                
+                # ยังคงดึงค่า Value จากการ Predict สถานะปัจจุบันเพื่อโชว์ % โอกาสชนะบน OLED
+                _, value = ai_brain.predict(game)
+                ai_win_percent = (1 + value) / 2 * 100
+                # ---------------------------------------
+
+                print(f"AI Win Chance: {ai_win_percent:.1f}%")
+                print(f"AI RECOMMENDS: Column {move}")
+                
+                # แสดงผลบน OLED และเปิดไฟ LED
                 update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move, win_chance=ai_win_percent)
                 hw.on_led(move) 
-                # update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
                 
                 hw.wait_push()
                 hw.off_all_led()

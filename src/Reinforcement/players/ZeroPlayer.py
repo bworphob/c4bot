@@ -154,25 +154,15 @@ class ZeroPlayer:
                     # value = 1 if node.game.winner == 1 else -1
 
 
-            # 3. Backpropagation (จุดที่ปรับปรุง)
-            # เราจะดันค่า Value ย้อนกลับไปจนถึง DummyNode
+            # 3. Backpropagation
+            # ส่งค่า Value ย้อนกลับไปยัง Root โดยสลับสัญญาณก่อนนำไปเก็บ
+            # เพราะ value ถูกกำหนดจากมุมมองของผู้เล่นที่อยู่ใน leaf/node นั้น
             temp_node = node
+            current_value = -value
             while temp_node.parent is not None:
-                # อัปเดตจำนวนครั้งที่ถูกสำรวจ
                 temp_node.num_visit += 1
-                
-                # อัปเดตคะแนนสะสม (Value)
-                # หัวใจคือ: ถ้าเราอยู่ในโหนดที่ 'ผู้เล่น 1' ต้องเดิน เราจะสะสมค่า value ตรงๆ
-                # แต่ถ้าเราอยู่ในโหนดที่ 'ผู้เล่น 2' ต้องเดิน เราจะกลับเครื่องหมาย (เพราะ -1 ของ P2 คือการชนะ)
-                if temp_node.parent.parent is not None: # เช็คว่า parent ไม่ใช่ DummyNode
-                    if temp_node.parent.game.current_turn == 1:
-                        temp_node.value += value
-                    else:
-                        temp_node.value -= value
-                else:
-                    # กรณีเป็น Root Node (ที่ต่อกับ DummyNode) ให้บวกค่าตามปกติ
-                    temp_node.value += value
-                        
+                temp_node.value += current_value
+                current_value = -current_value
                 temp_node = temp_node.parent
         return root
 
@@ -200,3 +190,47 @@ class ZeroPlayer:
 
 
 
+class TRTPlayer(ZeroPlayer):
+    def __init__(self, trt_brain, n_simulations=400):
+        # trt_brain คืออินสแตนซ์ของ TRTBrainWrapper
+        self.brain = trt_brain
+        self.n_simulations = n_simulations
+
+    def MCTS(self, game):
+        """ กระบวนการคิดล่วงหน้าโดยใช้ TensorRT """
+        root = MCNode(game, parent=DummyNode())
+
+        for _ in range(self.n_simulations):
+            # 1. Selection
+            node = root
+            while node.is_expanded:
+                move = node.select_best_move()
+                if move not in node.children:
+                    next_game = copy.deepcopy(node.game)
+                    next_game.insertColumn(move)
+                    node.children[move] = MCNode(next_game, move=move, parent=node)
+                node = node.children[move]
+
+            # 2. Evaluation & Expansion (ใช้ TRT Brain)
+            # สำคัญ: trt_brain.predict() คืนค่า (policy, value)
+            policy, value = self.brain.predict(node.game)
+            
+            if not node.game.isEnd:
+                node.expand(policy)
+            else:
+                if node.game.winner == 0: 
+                    value = 0
+                else: 
+                    value = 1 if node.game.winner == node.game.current_turn else -1
+
+            # 3. Backpropagation
+            # ส่งค่า Value ย้อนกลับไปยัง Root โดยสลับสัญญาณก่อนนำไปเก็บ
+            # เพราะ value ถูกกำหนดจากมุมมองของผู้เล่นที่อยู่ใน leaf/node นั้น
+            temp_node = node
+            current_value = -value
+            while temp_node.parent is not None:
+                temp_node.num_visit += 1
+                temp_node.value += current_value
+                current_value = -current_value
+                temp_node = temp_node.parent
+        return root

@@ -108,6 +108,7 @@ from GPIO.jetson_hardware import GPIO_Module
 from luma.oled.device import sh1106
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
+from Reinforcement.players.ZeroPlayer import TRTPlayer
 
 # def update_oled(device, title, msg, col=None, conf=None):
 #     with canvas(device) as draw:
@@ -135,7 +136,8 @@ def run_test():
     hw = GPIO_Module()
     engine_path = "src/Reinforcement/Models/model_v4.engine"
     ai_brain = TRTBrainWrapper(engine_path)
-    
+    ZeroAI_MCTS = TRTPlayer(ai_brain, n_simulations=400)
+
     # Setup OLED (Bus 1, Address 0x3C)
     serial = i2c(port=1, address=0x3C)
     device = sh1106(serial)
@@ -172,29 +174,79 @@ def run_test():
                 # push to confirm move and switch turn
                 hw.wait_push() 
                 
+            # else: # AI
+            #     update_oled(device, "AI THINKING...", "Processing...")
+            #     print("AI is calculating...")
+                
+            #     # AI calculates move
+            #     # policy = ai_brain.predict(game)
+            #     policy, value = ai_brain.predict(game)
+            #     ai_win_percent = (value + 1) / 2 * 100
+            #     valid_actions = game.validAction()
+                
+            #     masked_policy = np.full(policy.shape, -np.inf)
+            #     masked_policy[valid_actions] = policy[valid_actions]
+            #     move = int(np.argmax(masked_policy))
+                
+            #     # Display Hardware
+            #     print("AI RECOMMENDS: Column {}".format(move))
+            #     print("AI Confidence: {:.2f}%".format(ai_win_percent))
+            #     update_oled(device, "AI THINKING", "Confidence:", conf=ai_win_percent)######
+            #     hw.on_led(move) 
+            #     # update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move) 
+            #     update_oled(device, "AI SUGGESTS", "Drop & Push", col=move, conf=ai_win_percent) ######
+                
+            #     # Wait for human to drop AI's coin and push to switch turn
+            #     success = False
+            #     while not success:
+            #         try:
+            #             ai_move_input = int(input("Input AI move ({}): ".format(move)))
+            #             if game.insertColumn(ai_move_input):
+            #                 print("PUSH button.")
+            #                 success = True
+            #             else:
+            #                 print("Sync Error: Column Full!")
+            #         except ValueError:
+            #             pass
+                
+            #     # push to confirm move and switch turn
+            #     hw.wait_push()
+            #     hw.off_all_led()
+
+
+
             else: # AI
-                update_oled(device, "AI THINKING...", "Processing...")
-                print("AI is calculating...")
+                # --- ส่วนเดิม: AI คำนวณแบบสัญชาตญาณ (Predict Direct) ---
+                # update_oled(device, "AI THINKING...", "Processing...")
+                # print("AI is calculating...")
+                # policy, value = ai_brain.predict(game)
+                # ai_win_percent = (value + 1) / 2 * 100
+                # valid_actions = game.validAction()
+                # masked_policy = np.full(policy.shape, -np.inf)
+                # masked_policy[valid_actions] = policy[valid_actions]
+                # move = int(np.argmax(masked_policy))
+
+                # --- ส่วนใหม่: AI คำนวณแบบคิดล่วงหน้า (MCTS Search) ---
+                update_oled(device, "AI THINKING...", "MCTS Searching")
+                print("AI is calculating with MCTS...")
                 
-                # AI calculates move
-                # policy = ai_brain.predict(game)
-                policy, value = ai_brain.predict(game)
+                # เรียกใช้ MCTS ผ่านตัวแปร ZeroAI_MCTS (ที่ต้องประกาศไว้ตอนต้นของฟังก์ชัน run_test)
+                move, mcts_policy = ZeroAI_MCTS.act(game, tau=0)
+                
+                # ดึงค่า Value ปัจจุบันมาแสดงผล % บนหน้าจอ OLED
+                _, value = ai_brain.predict(game)
                 ai_win_percent = (value + 1) / 2 * 100
-                valid_actions = game.validAction()
-                
-                masked_policy = np.full(policy.shape, -np.inf)
-                masked_policy[valid_actions] = policy[valid_actions]
-                move = int(np.argmax(masked_policy))
-                
-                # Display Hardware
+                # --------------------------------------------------
+
+                # Display Hardware (ส่วนแสดงผลใช้ตัวแปร move และ ai_win_percent เดิมได้เลย)
                 print("AI RECOMMENDS: Column {}".format(move))
                 print("AI Confidence: {:.2f}%".format(ai_win_percent))
-                update_oled(device, "AI THINKING", "Confidence:", conf=ai_win_percent)######
-                hw.on_led(move) 
-                # update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move) 
-                update_oled(device, "AI SUGGESTS", "Drop & Push", col=move, conf=ai_win_percent) ######
                 
-                # Wait for human to drop AI's coin and push to switch turn
+                update_oled(device, "AI THINKING", "Confidence:", conf=ai_win_percent)
+                hw.on_led(move) 
+                update_oled(device, "AI SUGGESTS", "Drop & Push", col=move, conf=ai_win_percent) 
+                
+                # ส่วนรอรับ Input จากมนุษย์คงเดิม
                 success = False
                 while not success:
                     try:
@@ -207,9 +259,11 @@ def run_test():
                     except ValueError:
                         pass
                 
-                # push to confirm move and switch turn
                 hw.wait_push()
                 hw.off_all_led()
+
+
+                
 
         # End
         game.showBoard()

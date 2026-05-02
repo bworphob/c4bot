@@ -14,6 +14,7 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 from GameBoard.GameBoard import Connect4Board
+from Reinforcement.players.ZeroPlayer import TRTPlayer
 
 # Logger TensorRT
 TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
@@ -98,22 +99,38 @@ class TRTBrainWrapper:
         state = board.getStateAsPlayer().astype(np.float32)
 
 
-        # --- เพิ่มส่วนนี้เพื่อตรวจสอบ ---
-        print("\n" + "="*30)
-        print(" DEBUG: TENSOR INPUT CHECK ")
-        print("="*30)
-        print(f"Current Turn in Board: {board.current_turn}")
+        # # --- เพิ่มส่วนนี้เพื่อตรวจสอบ ---
+        # print("\n" + "="*30)
+        # print(" DEBUG: TENSOR INPUT CHECK ")
+        # print("="*30)
+        # print(f"Current Turn in Board: {board.current_turn}")
     
-        print("\n[Channel 0] - Current Player's Pieces (Should be AI):")
-        print(state[0])
+        # print("\n[Channel 0] - Current Player's Pieces (Should be AI):")
+        # print(state[0])
     
-        print("\n[Channel 1] - Opponent's Pieces (Should be Human):")
-        print(state[1])
+        # print("\n[Channel 1] - Opponent's Pieces (Should be Human):")
+        # print(state[1])
     
-        print("\n[Channel 2] - Turn Indicator (1.0 if AI's turn):")
-        print(state[2][0,0]) # ดูแค่ค่าเดียวเพราะมันเหมือนกันทั้งแผ่น
-        print("="*30 + "\n")
-    # ----------------------------
+        # print("\n[Channel 2] - Turn Indicator (1.0 if AI's turn):")
+        # print(state[2][0,0]) # ดูแค่ค่าเดียวเพราะมันเหมือนกันทั้งแผ่น
+        # print("="*30 + "\n")
+        # # ----------------------------
+
+
+        # # --- เพิ่มส่วน Debug ตรงนี้ ---
+        # print("\n" + "="*30)
+        # print(" DEBUG: AI VIEWING TENSOR ")
+        # print("="*30)
+        # # state[0] คือหมากของฝั่ง AI เอง (คนรัน predict)
+        # # state[1] คือหมากของฝั่งมนุษย์ (คู่ต่อสู้)
+        # print("Channel 0 (AI's pieces - Should match AI positions):\n", state[0])
+        # print("Channel 1 (Human's pieces - Should match your positions):\n", state[1])
+        # print("Channel 2 (Turn - Should be 1.0 if AI's turn):\n", state[2][0,0])
+        # print("="*30 + "\n")
+        # # ----------------------------
+
+
+
     
     # 2. prepare input
         input_data = np.expand_dims(state, axis=0) 
@@ -149,6 +166,63 @@ class TRTBrainWrapper:
 
         return policy, value
 
+# def play():
+#     print("Loading TensorRT Engine (Optimized for Jetson Nano) ...")
+    
+#     model_path = os.path.join(reinforcement_dir, "Models", "model_v4.engine")
+    
+#     if not os.path.exists(model_path):
+#         print(f"Error: Engine file not found at {model_path}")
+#         return
+
+#     zero_ai = TRTBrainWrapper(model_path)
+    
+#     human_player = 1
+#     board = Connect4Board(first_player=human_player)
+
+#     print("\n--- Game Start (TensorRT Edition)! ---")
+    
+#     while not board.isEnd:
+#         print(f"\nRound No: {board.round}")
+#         board.showBoard()
+        
+#         if board.current_turn == human_player:
+#             try:
+#                 move = int(input(f"Your Turn (Player {human_player}). Enter column (0-6): "))
+#                 if move not in board.validAction():
+#                     print("Invalid move! Try again.")
+#                     continue
+#             except ValueError:
+#                 print("Please enter a number between 0 and 6.")
+#                 continue
+#         else:
+#             print("AI (TensorRT) is thinking...")
+#             # policy = zero_ai.predict(board)
+#             policy, value = zero_ai.predict(board)
+
+            
+#             ai_win_percent = (value + 1) / 2 * 100
+#             print(f"AI Confidence: {ai_win_percent:.2f}%")
+
+#             valid_actions = board.validAction()
+            
+#             masked_policy = np.full(policy.shape, -np.inf)
+#             masked_policy[valid_actions] = policy[valid_actions]
+#             move = np.argmax(masked_policy)
+            
+#             print(f"AI chose column: {move}")
+#             print(f"AI Evaluation (Value): {value:.4f}")
+#         board.insertColumn(move)
+
+#     board.showBoard()
+#     if board.winner == 0:
+#         print("\n--- Game Over: DRAW! ---")
+#     else:
+#         winner_name = "You" if board.winner == human_player else "AI"
+#         print(f"\n--- Game Over: {winner_name} WON! ---")
+
+
+
 def play():
     print("Loading TensorRT Engine (Optimized for Jetson Nano) ...")
     
@@ -158,12 +232,17 @@ def play():
         print(f"Error: Engine file not found at {model_path}")
         return
 
-    zero_ai = TRTBrainWrapper(model_path)
+    # 1. สร้าง Brain Wrapper
+    ai_brain = TRTBrainWrapper(model_path)
+    
+    # 2. ครอบด้วย TRTPlayer เพื่อใช้งาน MCTS (แทนการเรียกตรงๆ)
+    # n_simulations=400 เป็นค่าที่แนะนำสำหรับ Jetson Nano
+    ZeroAI = TRTPlayer(ai_brain, n_simulations=400)
     
     human_player = 1
     board = Connect4Board(first_player=human_player)
 
-    print("\n--- Game Start (TensorRT Edition)! ---")
+    print("\n--- Game Start (TensorRT Edition with MCTS)! ---")
     
     while not board.isEnd:
         print(f"\nRound No: {board.round}")
@@ -179,22 +258,21 @@ def play():
                 print("Please enter a number between 0 and 6.")
                 continue
         else:
-            print("AI (TensorRT) is thinking...")
-            # policy = zero_ai.predict(board)
-            policy, value = zero_ai.predict(board)
-
+            print("AI (TensorRT + MCTS) is thinking...")
+            
+            # --- จุดที่แก้ไข: เปลี่ยนมาใช้ MCTS Search ---
+            # move และ mcts_policy จะถูกคำนวณจากการจำลองเกมล่วงหน้า 400 รอบ
+            move, mcts_policy = ZeroAI.act(board, tau=0)
+            
+            # ดึงค่า Value ปัจจุบันมาแสดงผลเพื่อดูแนวโน้มการชนะ
+            _, value = ai_brain.predict(board)
+            # ------------------------------------------
             
             ai_win_percent = (value + 1) / 2 * 100
-            print(f"AI Confidence: {ai_win_percent:.2f}%")
-
-            valid_actions = board.validAction()
-            
-            masked_policy = np.full(policy.shape, -np.inf)
-            masked_policy[valid_actions] = policy[valid_actions]
-            move = np.argmax(masked_policy)
-            
+            print(f"AI Confidence (from Current State): {ai_win_percent:.2f}%")
             print(f"AI chose column: {move}")
             print(f"AI Evaluation (Value): {value:.4f}")
+            
         board.insertColumn(move)
 
     board.showBoard()
@@ -203,6 +281,7 @@ def play():
     else:
         winner_name = "You" if board.winner == human_player else "AI"
         print(f"\n--- Game Over: {winner_name} WON! ---")
+
 
 if __name__ == "__main__":
     play()

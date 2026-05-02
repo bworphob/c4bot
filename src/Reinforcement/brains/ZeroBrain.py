@@ -56,14 +56,45 @@ class ZeroBrain:
         # model.summary()
         return model
 
+    # def predict(self, board_state):
+    #     """รับกระดาน (3, 6, 7) แล้วทายผลออกเป็น (โอกาสเลือกช่อง, โอกาสชนะ)"""
+    #     # preprae input data by reshaping
+    #     input_data = board_state.reshape((1, 3, 6, 7)).astype(np.float32)
+        
+    #     policy, value = self.predict_function(input_data, training=False)
+        
+    #     return policy.numpy()[0], value.numpy()[0][0]
+
+
+
+
+
+    
     def predict(self, board_state):
         """รับกระดาน (3, 6, 7) แล้วทายผลออกเป็น (โอกาสเลือกช่อง, โอกาสชนะ)"""
-        # preprae input data by reshaping
+        # เตรียมข้อมูลเบื้องต้นในรูปแบบ NCHW (1, 3, 6, 7) ตามมาตรฐานที่คุณใช้
         input_data = board_state.reshape((1, 3, 6, 7)).astype(np.float32)
         
-        policy, value = self.predict_function(input_data, training=False)
+        try:
+            # พยายามรันด้วยรูปแบบปกติ (NCHW) ก่อน
+            policy, value = self.predict_function(input_data, training=False)
+        except tf.errors.UnimplementedError as e:
+            # ถ้าเจอ Error ว่า CPU ไม่รองรับ NCHW ให้สลับเป็น NHWC (1, 6, 7, 3)
+            if "NCHW" in str(e) or "Conv2D" in str(e):
+                input_data_cpu = np.transpose(input_data, (0, 2, 3, 1))
+                # รันด้วยความเร็วปกติผ่านโมเดลโดยตรง (ไม่ต้องใช้ tf.function ซ้อนในนี้เพื่อความชัวร์)
+                policy, value = self.model(input_data_cpu, training=False)
+            else:
+                raise e
         
         return policy.numpy()[0], value.numpy()[0][0]
+
+
+
+
+
+
+
 
     def train(self, memory_batch):
        

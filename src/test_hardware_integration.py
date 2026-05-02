@@ -109,14 +109,26 @@ from luma.oled.device import sh1106
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 
-def update_oled(device, title, msg, col=None):
+# def update_oled(device, title, msg, col=None, conf=None):
+#     with canvas(device) as draw:
+#         draw.text((5, 5), title, fill="white")
+#         draw.text((5, 20), msg, fill="white")
+#         if col is not None:
+#             draw.rectangle((40, 35, 80, 60), outline="white")
+#             # เปลี่ยน f-string เป็น .format() เพื่อรองรับ Python 3.6 รุ่นเก่า
+#             draw.text((48, 42), "C{}".format(col), fill="white")
+
+def update_oled(device, title, msg, col=None, conf=None):
     with canvas(device) as draw:
         draw.text((5, 5), title, fill="white")
         draw.text((5, 20), msg, fill="white")
+        # แสดงค่า Confidence ถ้ามี
+        if conf is not None:
+            draw.text((5, 45), "Conf: {:.1f}%".format(conf), fill="white")
+        # แสดงกรอบคอลัมน์ถ้ามี
         if col is not None:
-            draw.rectangle((40, 35, 80, 60), outline="white")
-            # เปลี่ยน f-string เป็น .format() เพื่อรองรับ Python 3.6 รุ่นเก่า
-            draw.text((48, 42), "C{}".format(col), fill="white")
+            draw.rectangle((85, 35, 120, 60), outline="white")
+            draw.text((93, 42), "C{}".format(col), fill="white")
 
 def run_test():
     # 1. Setup Hardware & AI
@@ -177,8 +189,10 @@ def run_test():
                 # Display Hardware
                 print("AI RECOMMENDS: Column {}".format(move))
                 print("AI Confidence: {:.2f}%".format(ai_win_percent))
+                update_oled(device, "AI THINKING", "Confidence:", conf=ai_win_percent)######
                 hw.on_led(move) 
-                update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
+                # update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move) 
+                update_oled(device, "AI SUGGESTS", "Drop & Push", col=move, conf=ai_win_percent) ######
                 
                 # Wait for human to drop AI's coin and push to switch turn
                 success = False

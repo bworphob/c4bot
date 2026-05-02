@@ -144,12 +144,15 @@ class ZeroPlayer:
             if not node.game.isEnd:
                 node.expand(policy)
             else:
-                # กำหนดคะแนนตามผลแพ้ชนะจริง
+                # กำหนดคะแนนตามผลแพ้ชนะจริง (Relative: self=1, opponent=-1)
                 if node.game.winner == 0: 
                     value = 0
                 else: 
-                    # ถ้าคนชนะคือผู้เล่น 1 ให้ค่าเป็น 1, ถ้าผู้เล่น 2 ชนะให้ค่าเป็น -1
-                    value = 1 if node.game.winner == 1 else -1
+                    # ถ้าผู้ชนะตรงกับ current_turn ให้ 1, ไม่ตรงให้ -1
+                    value = 1 if node.game.winner == node.game.current_turn else -1
+                    # # ถ้าคนชนะคือผู้เล่น 1 ให้ค่าเป็น 1, ถ้าผู้เล่น 2 ชนะให้ค่าเป็น -1
+                    # value = 1 if node.game.winner == 1 else -1
+
 
             # 3. Backpropagation (จุดที่ปรับปรุง)
             # เราจะดันค่า Value ย้อนกลับไปจนถึง DummyNode
@@ -190,3 +193,10 @@ class ZeroPlayer:
             action = np.argmax(policy)
             
         return action, policy
+        
+
+
+
+
+
+

@@ -183,7 +183,8 @@ def run_main():
         print("Human started first.")
         game = Connect4Board(first_player=1) 
         game.board = first_scan
-        game.current_turn = 2 # Force AI to be the second player since human started first
+        # game.current_turn = 2 # Force AI to be the second player since human started first
+        game.current_turn = 1 # Human goes first
         game.showBoard()
     else:
         # if no coins --> AI started first

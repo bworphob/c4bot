@@ -48,9 +48,27 @@ def play():
         else:
             # AI move
             print("AI is thinking...")
+
+            # --- เพิ่มส่วน Debug Tensor ---
+            state = board.getStateAsPlayer()
+            print("\n" + "="*30)
+            print(" DEBUG: CPU TENSOR INPUT ")
+            print("="*30)
+            print("Channel 0 (Current Player):\n", state[0])
+            print("Channel 1 (Opponent):\n", state[1])
+            print("Channel 2 (Indicator):", state[2][0,0])
+            print("="*30 + "\n")
+
+
             # tau=0 for deterministic move (best move), tau>0 for more exploration 
             move, policy = ai_player.act(board, tau=0)
+            # คำนวณความมั่นใจในตาเดินที่เลือก (%)
+            conf = policy[move] * 100
+
+            print("-" * 20)
             print(f"AI chose column: {move}")
+            print(f"AI Move Confidence: {conf:.2f}%")
+            print("-" * 20)
             # print(f"AI Confidence: {np.round(policy, 3)}") # To see the confidence of each move (optional)
 
         board.insertColumn(move)

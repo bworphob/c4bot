@@ -96,6 +96,24 @@ class TRTBrainWrapper:
     def predict(self, board):
     # 1. pull state
         state = board.getStateAsPlayer().astype(np.float32)
+
+
+        # --- เพิ่มส่วนนี้เพื่อตรวจสอบ ---
+        print("\n" + "="*30)
+        print(" DEBUG: TENSOR INPUT CHECK ")
+        print("="*30)
+        print(f"Current Turn in Board: {board.current_turn}")
+    
+        print("\n[Channel 0] - Current Player's Pieces (Should be AI):")
+        print(state[0])
+    
+        print("\n[Channel 1] - Opponent's Pieces (Should be Human):")
+        print(state[1])
+    
+        print("\n[Channel 2] - Turn Indicator (1.0 if AI's turn):")
+        print(state[2][0,0]) # ดูแค่ค่าเดียวเพราะมันเหมือนกันทั้งแผ่น
+        print("="*30 + "\n")
+    # ----------------------------
     
     # 2. prepare input
         input_data = np.expand_dims(state, axis=0) 

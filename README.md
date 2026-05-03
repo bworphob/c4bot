@@ -1,10 +1,10 @@
-# connect4Bot
+# Connect4Bot
 
 This project focuses on studying AI for playing Connect4 using Reinforcement Learning and deploying it on Jetson Nano 2gb. 
 
-We are interetested in a reinforcement, so we decide to create a Connect4 AI player follow AlphaZero.
+We are interetested in Reinforcement Learning, so we decide to create a Connect4 AI player follow AlphaZero Approach.
 
-The structure of project are shown as follow. 
+The project structure is shown below. 
 
 ```
 c4bot/
@@ -19,6 +19,10 @@ c4bot/
 ├── .gitignore
 └── README.md
 ```
+
+**Medium Article:** [Read full explanation](https://medium.com/@woraphob.dmi/connect4bot-ai-powered-intelligent-assistant-using-reinforcement-leaning-e6af93d0a82f)
+
+**Demo Video:** [Watch here](https://www.youtube.com/shorts/v3SHC1U0HY8) 
 
 ## How to use
 
@@ -36,13 +40,13 @@ This script generates self-play data, trains a new model, and saves the result u
 cd ~/c4bot
 python3 src/Reinforcement/convert_to_onnx.py
 ```
-This loads `model_v8.keras` and writes `model_v8.onnx` in the current folder.
+This loads `model_v4.keras` and writes `model_v4.onnx` in the current folder.
 
 ### 3. Convert `.onnx` to TensorRT `.engine`
 Build the engine with TensorRT:
 ```bash
 cd ~/c4bot
-/usr/src/tensorrt/bin/trtexec --onnx=src/Reinforcement/Models/model_v8.onnx --saveEngine=src/Reinforcement/Models/model_v8.engine --fp16
+/usr/src/tensorrt/bin/trtexec --onnx=src/Reinforcement/Models/model_v4.onnx --saveEngine=src/Reinforcement/Models/model_v4.engine --fp16
 ```
 This step requires a TensorRT-enabled system such as Jetson or a PC with TensorRT installed.
 
@@ -106,7 +110,7 @@ cd ~/c4bot
 python3 src/Reinforcement/train_main.py --games 50
 python3 src/Reinforcement/convert_to_onnx.py
 
-/usr/src/tensorrt/bin/trtexec --onnx=src/Reinforcement/Models/model_v8.onnx --saveEngine=src/Reinforcement/Models/model_v8.engine --fp16
+/usr/src/tensorrt/bin/trtexec --onnx=src/Reinforcement/Models/model_v4.onnx --saveEngine=src/Reinforcement/Models/model_v4.engine --fp16
 
 sudo python3 main.py
 ```

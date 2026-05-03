@@ -5,11 +5,17 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 from .BrainComponent import build_architecture
 
+# หา path ที่ถูกต้องสำหรับ Models โฟลเดอร์
+_current_file = os.path.abspath(__file__)  # /path/to/src/Reinforcement/brains/ZeroBrain.py
+_reinforcement_dir = os.path.dirname(os.path.dirname(_current_file))  # /path/to/src/Reinforcement
+_models_dir = os.path.join(_reinforcement_dir, 'Models')
+
 class ZeroBrain:
     def __init__(self, iteration):
         self.iteration = iteration
-        # self.model_path = f'Models/model_v{iteration}.keras'
-        self.model_path = f'Reinforcement/Models/model_v{iteration}.keras'
+        # self.model_path = f'Models/model_v{iteration}.keras'  # เดิม
+        # self.model_path = f'Reinforcement/Models/model_v{iteration}.keras'  # เดิม (relative)
+        self.model_path = os.path.join(_models_dir, f'model_v{iteration}.keras')  # ใหม่ (absolute)
 
         
         model_dir = os.path.dirname(self.model_path)
@@ -128,7 +134,8 @@ class ZeroBrain:
     def save_model(self):
         """บันทึกสมองเก็บไว้ในตำแหน่งที่ตั้งไว้ใน model_path"""
         
-        actual_path = f'Reinforcement/Models/model_v{self.iteration}.keras'
+        # actual_path = f'Reinforcement/Models/model_v{self.iteration}.keras'  # เดิม (relative)
+        actual_path = os.path.join(_models_dir, f'model_v{self.iteration}.keras')  # ใหม่ (absolute)
         
         model_dir = os.path.dirname(actual_path)
         if not os.path.exists(model_dir):

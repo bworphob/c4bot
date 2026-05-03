@@ -176,12 +176,18 @@ class ZeroPlayer:
         visit_counts = root.child_num_visit
         policy = visit_counts / np.sum(visit_counts)
 
+        # Debug: แสดง visit counts, policy, และ action ที่เลือก
+        print(f"Debug AI Move Selection:")
+        print(f"Visit Counts: {visit_counts}")
+        print(f"Policy: {policy}")
+
         # ถ้า tau=1 (ตอนเทรน) จะสุ่มเดินตามความมั่นใจ, ถ้า tau=0 (แข่งจริง) จะเลือกช่องที่มั่นใจที่สุด
         if tau == 1:
             action = np.random.choice(7, p=policy)
         else:
             action = np.argmax(policy)
             
+        print(f"Selected Action: {action}")
         return action, policy
         
 

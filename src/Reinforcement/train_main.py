@@ -259,8 +259,15 @@ from GameBoard.GameBoard import Connect4Board
 from brains.ZeroBrain import ZeroBrain
 from players.ZeroPlayer import ZeroPlayer
 
+# หา path ที่ถูกต้องสำหรับ datasets และ Models โฟลเดอร์
+_current_file = os.path.abspath(__file__)  # /path/to/src/Reinforcement/train_main.py
+_reinforcement_dir = os.path.dirname(_current_file)  # /path/to/src/Reinforcement
+_datasets_dir = os.path.join(_reinforcement_dir, 'datasets')
+_models_dir = os.path.join(_reinforcement_dir, 'Models')
+
 def save_experience(folder_name, filename, data):
-    path = f"./Reinforcement/datasets/{folder_name}"
+    # path = f"./Reinforcement/datasets/{folder_name}"  # เดิม (relative)
+    path = os.path.join(_datasets_dir, folder_name)  # ใหม่ (absolute)
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
     with open(os.path.join(path, filename), 'wb') as f:
@@ -320,7 +327,8 @@ def run_training(iteration):
     brain = ZeroBrain(iteration)
     
     all_datasets = []
-    dataset_root = "./Reinforcement/datasets/"
+    # dataset_root = "./Reinforcement/datasets/"  # เดิม (relative)
+    dataset_root = _datasets_dir  # ใหม่ (absolute)
     
     if not os.path.exists(dataset_root):
         print("No dataset folder found.")
@@ -391,7 +399,8 @@ if __name__ == "__main__":
     parser.add_argument("--games", type=int, default=50)
     args = parser.parse_args()
 
-    model_files = glob.glob("./Reinforcement/Models/model_v*.keras")
+    # model_files = glob.glob("./Reinforcement/Models/model_v*.keras")  # เดิม (relative)
+    model_files = glob.glob(os.path.join(_models_dir, "model_v*.keras"))  # ใหม่ (absolute)
     
     if model_files:
         iters = [int(f.split('_v')[-1].split('.')[0]) for f in model_files]

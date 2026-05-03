@@ -89,12 +89,13 @@ class ZeroBrain:
             if "NCHW" in str(e) or "Conv2D" in str(e):
                 input_data_cpu = np.transpose(input_data, (0, 2, 3, 1))
                 # รันด้วยความเร็วปกติผ่านโมเดลโดยตรง (ไม่ต้องใช้ tf.function ซ้อนในนี้เพื่อความชัวร์)
-                policy, value = self.model(input_data_cpu, training=False)
+                # policy, value = self.model(input_data_cpu, training=False)#############
+                policy, value = self.model.predict(input_data, verbose=0)
             else:
                 raise e
         
-        return policy.numpy()[0], value.numpy()[0][0]
-
+        # return policy.numpy()[0], value.numpy()[0][0]############
+        return policy[0], value[0][0]
 
 
 

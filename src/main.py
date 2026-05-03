@@ -186,7 +186,9 @@ def run_main():
         game = Connect4Board(first_player=1) 
         game.board = first_scan
         # game.current_turn = 2 # Force AI to be the second player since human started first
-        game.current_turn = 1 # Human goes first
+        # game.current_turn = 1 # Human goes first
+        game.current_turn = 2
+        game.round = coin_count + 1
         game.showBoard()
     else:
         # if no coins --> AI started first
@@ -249,8 +251,8 @@ def run_main():
                 # move = int(np.argmax(masked_policy))
                 
                 # --- โค้ดใหม่ (ใช้ MCTS ผ่าน TRTPlayer) ---
-                print("\n>>> AI THINKING (MCTS Search)...")
-                update_oled(device, "AI THINKING...", "MCTS Searching")
+                print("\n>>> AI THINKING (Search)...")
+                update_oled(device, "AI THINKING...", "Searching")
                 
                 # เรียกใช้ MCTS Search 400 รอบ (ZeroAI คืออินสแตนซ์ของ TRTPlayer)
                 move, mcts_policy = ZeroAI.act(game, tau=0) 

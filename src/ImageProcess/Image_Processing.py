@@ -9,7 +9,8 @@ class Image_Processing:
     def __init__(self):
         # Init color value (will be updated after execution calibration)
         # self.red_low = np.array([140, 110, 25])
-        self.red_low = np.array([130, 80, 20])
+        # self.red_low = np.array([130, 80, 20])
+        self.red_low = np.array([130, 110, 50])
         self.red_up = np.array([180, 255, 255])
         self.yellow_low = np.array([5, 20, 60])
         self.yellow_up = np.array([70, 200, 255])
@@ -17,7 +18,7 @@ class Image_Processing:
         # Init image
         # self.src_pts = np.float32([[0, 21], [35, 463], [629, 20], [590, 465]])
         # self.src_pts = np.float32([[330, 80], [315,515], [930, 80], [930, 525]])
-        self.src_pts = np.float32([[330, 100], [315, 545], [930, 100], [930, 545]])
+        self.src_pts = np.float32([[385, 95], [375, 535], [970, 90], [970, 535]])
         self.width, self.height = 640, 480
         self.dest_pts = np.float32([[0, 0], [0, self.height], [self.width, 0], [self.width, self.height]])
 
@@ -167,7 +168,7 @@ class Image_Processing:
         print(f"Saved: 2_perspective.jpg")
 
         # 3. Blur (average filter)
-        blurred = cv2.blur(warped, (12, 12))
+        blurred = cv2.blur(warped, (17, 17))
         cv2.imwrite(os.path.join(output_dir, "3_blurred.jpg"), blurred)
         print(f"Saved: 3_blurred.jpg")
 

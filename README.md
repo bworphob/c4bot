@@ -13,7 +13,8 @@ c4bot/
 │   ├── GPIO/
 │   ├── ImageProcess/
 │   ├── Reinforcement/
-│   ├── test_hardware_integration.py    
+│   ├── test_hardware_integration.py
+│   ├── test_model.py        
 │   └── main.py         
 ├── .gitignore
 └── README.md
@@ -24,6 +25,7 @@ c4bot/
 ### 1. Train the model
 Run training from the reinforcement folder:
 ```bash
+cd ~/c4bot
 python3 src/Reinforcement/train_main.py --games 50
 ```
 This script generates self-play data, trains a new model, and saves the result under `src/Reinforcement/Models/`.
@@ -31,6 +33,7 @@ This script generates self-play data, trains a new model, and saves the result u
 ### 2. Convert the `.keras` model to `.onnx`
 
 ```bash
+cd ~/c4bot
 python3 src/Reinforcement/convert_to_onnx.py
 ```
 This loads `model_v8.keras` and writes `model_v8.onnx` in the current folder.
@@ -38,6 +41,7 @@ This loads `model_v8.keras` and writes `model_v8.onnx` in the current folder.
 ### 3. Convert `.onnx` to TensorRT `.engine`
 Build the engine with TensorRT:
 ```bash
+cd ~/c4bot
 /usr/src/tensorrt/bin/trtexec --onnx=src/Reinforcement/Models/model_v8.onnx --saveEngine=src/Reinforcement/Models/model_v8.engine --fp16
 ```
 This step requires a TensorRT-enabled system such as Jetson or a PC with TensorRT installed.
@@ -45,6 +49,7 @@ This step requires a TensorRT-enabled system such as Jetson or a PC with TensorR
 ### 4. Run full integration
 Run the main hardware integration entry point:
 ```bash
+cd ~/c4bot
 sudo python3 src/main.py
 ```
 This is the full system flow with camera, GPIO, OLED, and TensorRT inference.
@@ -56,6 +61,7 @@ Note: `sudo` is required for GPIO/Hardware access
 ### 5. Test game rule logic
 Run the simple board logic demo:
 ```bash
+cd ~/c4bot
 python3 -m src.GameBoard.Example
 ```
 This checks the Connect4 rule engine and valid moves without AI.
@@ -63,6 +69,7 @@ This checks the Connect4 rule engine and valid moves without AI.
 ### 6. Test the Keras AI model
 Run the AI vs human demo using the standard model .keras:
 ```bash
+cd ~/c4bot
 python3 -m src.Reinforcement.playerVsAI
 ```
 This uses the existing `ZeroBrain` model logic and lets a human play against AI.
@@ -70,6 +77,7 @@ This uses the existing `ZeroBrain` model logic and lets a human play against AI.
 ### 7. Test the TensorRT AI model
 Run the TensorRT AI demo:
 ```bash
+cd ~/c4bot
 python3 -m src.Reinforcement.playerVsAI_TRT
 ```
 This loads `src/Reinforcement/Models/model_v6.engine` and runs inference through TensorRT.
@@ -77,6 +85,7 @@ This loads `src/Reinforcement/Models/model_v6.engine` and runs inference through
 ### 8. Test full hardware with TensorRT
 Use the hardware integration test script:
 ```bash
+cd ~/c4bot
 sudo python3 -m src.test_hardware_integration
 ```
 This is a Jetson-oriented test that exercises GPIO, OLED, and the TensorRT engine in a hardware flow.
@@ -93,6 +102,7 @@ Keep generated artifacts separate from code:
 
 ```bash
 # Train -> Convert -> Optimize -> Play
+cd ~/c4bot
 python3 src/Reinforcement/train_main.py --games 50
 python3 src/Reinforcement/convert_to_onnx.py
 

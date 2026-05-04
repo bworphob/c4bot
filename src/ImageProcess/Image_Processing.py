@@ -9,10 +9,10 @@ class Image_Processing:
     def __init__(self):
         # Init color value (will be updated after execution calibration)
         # self.red_low = np.array([140, 110, 25])
-        # self.red_low = np.array([130, 80, 20])
-        self.red_low = np.array([130, 110, 50])
+        self.red_low = np.array([130, 80, 20])
+        # self.red_low = np.array([130, 110, 50])
         self.red_up = np.array([180, 255, 255])
-        self.yellow_low = np.array([5, 20, 60])
+        self.yellow_low = np.array([15, 20, 60])
         self.yellow_up = np.array([70, 200, 255])
 
         # Init image

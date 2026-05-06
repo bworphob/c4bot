@@ -1,5 +1,9 @@
 # Connect4Bot
 
+**Medium Article:** [Read full explanation](https://medium.com/@woraphob.dmi/connect4bot-ai-powered-intelligent-assistant-using-reinforcement-leaning-e6af93d0a82f)
+
+**Demo Video:** [Watch here](https://www.youtube.com/shorts/v3SHC1U0HY8) 
+
 This project focuses on studying AI for playing Connect4 using Reinforcement Learning and deploying it on Jetson Nano 2gb. 
 
 We are interetested in Reinforcement Learning, so we decide to create a Connect4 AI player follow AlphaZero Approach.
@@ -17,12 +21,36 @@ c4bot/
 │   ├── test_model.py        
 │   └── main.py         
 ├── .gitignore
+├── requirements.txt
 └── README.md
 ```
 
-**Medium Article:** [Read full explanation](https://medium.com/@woraphob.dmi/connect4bot-ai-powered-intelligent-assistant-using-reinforcement-leaning-e6af93d0a82f)
 
-**Demo Video:** [Watch here](https://www.youtube.com/shorts/v3SHC1U0HY8) 
+## Prerequisites
+
+- JetPack 4.6 (Standard for Jetson Nano 2GB)
+- Python 3.6+
+- TensorRT (Pre-installed with JetPack)
+
+## Setup
+
+1. Update system packages:
+```bash
+sudo apt update
+sudo apt upgrade -y
+```
+
+2. Create and activate virtual environment:
+```bash
+cd ~/c4bot
+python3 -m venv --system-site-packages myenv
+source myenv/bin/activate
+```
+
+3. Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 ## How to use
 
@@ -76,7 +104,7 @@ Run the AI vs human demo using the standard model .keras:
 cd ~/c4bot
 python3 -m src.Reinforcement.playerVsAI
 ```
-This uses the existing `ZeroBrain` model logic and lets a human play against AI.
+Note: On some CPUs, you might see a layout error because the model is optimized for GPU (NCHW format). If you are running on Jetson Nano, we recommend using the TensorRT version (Step 7) for better performance.
 
 ### 7. Test the TensorRT AI model
 Run the TensorRT AI demo:
@@ -97,10 +125,6 @@ This is a Jetson-oriented test that exercises GPIO, OLED, and the TensorRT engin
 ## Notes
 - `.engine` conversion requires TensorRT and typically should be done on the target Jetson or TensorRT-capable device.
 
-## Recommended structure
-Keep generated artifacts separate from code:
-- `src/Reinforcement/Models/` for `.keras` and `.engine`
-- `src/Reinforcement/convert_to_onnx.py` for model export
 
 ## Quick commands
 
@@ -112,5 +136,5 @@ python3 src/Reinforcement/convert_to_onnx.py
 
 /usr/src/tensorrt/bin/trtexec --onnx=src/Reinforcement/Models/model_v4.onnx --saveEngine=src/Reinforcement/Models/model_v4.engine --fp16
 
-sudo python3 main.py
+sudo python3 src/main.py
 ```

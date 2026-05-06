@@ -37,10 +37,10 @@ def test_model():
 def create_test_board():
     board = Connect4Board(first_player=1)
     board.insertColumn(0)  # P1
-    board.insertColumn(4)  # P2 (ลงไกลๆ)
+    board.insertColumn(4)  # P2 
     board.insertColumn(1)  # P1
-    board.insertColumn(5)  # P2 (ลงไกลๆ)
-    board.insertColumn(2)  # P1 -> ตอนนี้ P1 จ่อชนะที่คอลัมน์ 3
+    board.insertColumn(5)  # P2 
+    board.insertColumn(2)  # P1 -> P1 has a chance of winning at column 3.
     return board
 
 if __name__ == "__main__":

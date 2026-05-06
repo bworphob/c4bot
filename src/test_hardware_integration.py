@@ -123,10 +123,10 @@ def update_oled(device, title, msg, col=None, conf=None):
     with canvas(device) as draw:
         draw.text((5, 5), title, fill="white")
         draw.text((5, 20), msg, fill="white")
-        # แสดงค่า Confidence ถ้ามี
+        # Display confidence value if available
         if conf is not None:
             draw.text((5, 45), "AI_win: {:.1f}%".format(conf), fill="white")
-        # แสดงกรอบคอลัมน์ถ้ามี
+        # Display column frame if available
         if col is not None:
             draw.rectangle((85, 35, 120, 60), outline="white")
             draw.text((93, 42), "C{}".format(col), fill="white")

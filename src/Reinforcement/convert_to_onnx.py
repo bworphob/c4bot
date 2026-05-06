@@ -3,8 +3,8 @@ import tf2onnx
 import os
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-load_path = os.path.join(current_dir, 'Models', 'model_v8.keras')
-save_path = os.path.join(current_dir, 'Models', 'model_v8.onnx')
+load_path = os.path.join(current_dir, 'Models', 'model_v4.keras')
+save_path = os.path.join(current_dir, 'Models', 'model_v4.onnx')
 
 model = tf.keras.models.load_model(load_path)
 input_signature = [tf.TensorSpec(model.inputs[0].shape, tf.float32, name='input')]
@@ -18,4 +18,4 @@ onnx_model, _ = tf2onnx.convert.from_keras(
 with open(save_path, 'wb') as f:
     f.write(onnx_model.SerializeToString())
 
-print("Done! model_v8.onnx created.")
+print("Done! model_v4.onnx created.")

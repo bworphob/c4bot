@@ -68,7 +68,7 @@ This script generates self-play data, trains a new model, and saves the result u
 cd ~/c4bot
 python3 src/Reinforcement/convert_to_onnx.py
 ```
-This loads `model_v4.keras` and writes `model_v4.onnx` in the current folder.
+This loads `model_v4.keras` and writes `model_v4.onnx` to `src/Reinforcement/Models/`.
 
 ### 3. Convert `.onnx` to TensorRT `.engine`
 Build the engine with TensorRT:
@@ -87,6 +87,11 @@ sudo python3 src/main.py
 This is the full system flow with camera, GPIO, OLED, and TensorRT inference.
 
 Note: `sudo` is required for GPIO/Hardware access
+
+## Implementation notes
+
+- `src/GameBoard/GameBoard.py` encodes board state with `getStateAsPlayer()` as: current player pieces, opponent pieces, and a turn indicator plane.
+- `src/ImageProcess/Image_Processing.py` maps detected colors in `scan_board()` as: `2 = yellow coin`, `1 = red coin`, and `0 = empty slot`.
 
 ## Example test
 

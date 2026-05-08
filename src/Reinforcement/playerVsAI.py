@@ -2,21 +2,13 @@ import os
 import sys
 import numpy as np
 
-
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-# from GameBoard.GameBoard import Connect4Board
-# from brains.ZeroBrain import ZeroBrain        
-# from players.ZeroPlayer import ZeroPlayer    
-
-
-current_file = os.path.abspath(__file__) 
+current_file = os.path.abspath(__file__)
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 src_path = os.path.join(root_path, 'src')
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 from GameBoard.GameBoard import Connect4Board
-from Reinforcement.brains.ZeroBrain import ZeroBrain        
+from Reinforcement.brains.ZeroBrain import ZeroBrain
 from Reinforcement.players.ZeroPlayer import ZeroPlayer
 
 def play():
@@ -49,7 +41,7 @@ def play():
             # AI move
             print("AI is thinking...")
 
-            # --- เพิ่มส่วน Debug Tensor ---
+            # Debug tensor input for the current board state
             state = board.getStateAsPlayer()
             print("\n" + "="*30)
             print(" DEBUG: CPU TENSOR INPUT ")
@@ -59,17 +51,15 @@ def play():
             print("Channel 2 (Indicator):", state[2][0,0])
             print("="*30 + "\n")
 
-
-            # tau=0 for deterministic move (best move), tau>0 for more exploration 
+            # tau=0 for deterministic move (best move), tau>0 for more exploration
             move, policy = ai_player.act(board, tau=0)
-            # คำนวณความมั่นใจในตาเดินที่เลือก (%)
+            # compute confidence score for the selected move (%)
             conf = policy[move] * 100
 
             print("-" * 20)
             print(f"AI chose column: {move}")
             print(f"AI Move Confidence: {conf:.2f}%")
             print("-" * 20)
-            # print(f"AI Confidence: {np.round(policy, 3)}") # To see the confidence of each move (optional)
 
         board.insertColumn(move)
 

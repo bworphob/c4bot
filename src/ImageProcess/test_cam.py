@@ -3,11 +3,9 @@ import os
 import sys
 import numpy as np
 
-# แทรก Path เพื่อให้เรียกใช้ Module ใน src ได้ (เผื่อรันจาก Root ของโปรเจกต์)
-# os.getcwd() จะคืนค่า /home/bworphob/c4bot
-# sys.path.append(os.path.join(os.getcwd(), 'src'))
-current_dir = os.path.dirname(os.path.abspath(__file__)) # อยู่ใน ImageProcess
-src_dir = os.path.dirname(current_dir) # ขยับขึ้นมาที่ src
+# add src to sys.path so modules can be imported when running from repo root
+current_dir = os.path.dirname(os.path.abspath(__file__))  # inside ImageProcess
+src_dir = os.path.dirname(current_dir)  # move up to src
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 

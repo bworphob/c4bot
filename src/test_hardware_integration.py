@@ -1,97 +1,3 @@
-# import os
-# import sys
-# import numpy as np
-# import time
-
-# # แทรก Path เพื่อให้เรียกใช้ Module ใน src ได้
-# sys.path.append(os.path.join(os.getcwd(), 'src'))
-
-# from GameBoard.GameBoard import Connect4Board
-# from Reinforcement.playerVsAI_TRT import TRTBrainWrapper
-# from GPIO.jetson_hardware import GPIO_Module
-# # หมายเหตุ: ถ้าใช้ OLED ให้ import luma ตรงนี้ด้วย
-# from luma.oled.device import sh1106
-# from luma.core.interface.serial import i2c
-# from luma.core.render import canvas
-
-# def update_oled(device, title, msg, col=None):
-#     with canvas(device) as draw:
-#         draw.text((5, 5), title, fill="white")
-#         draw.text((5, 20), msg, fill="white")
-#         if col is not None:
-#             draw.rectangle((40, 35, 80, 60), outline="white")
-#             draw.text((48, 42), f"C{col}", fill="white")
-
-# def run_test():
-#     # 1. Setup Hardware & AI
-#     hw = GPIO_Module()
-#     engine_path = "src/Reinforcement/Models/model_v6.engine"
-#     ai_brain = TRTBrainWrapper(engine_path)
-    
-#     # Setup OLED
-#     serial = i2c(port=1, address=0x3C)
-#     device = sh1106(serial)
-
-#     # 2. เริ่มเกม
-#     first_p = int(input("Who starts first? (1: Human, 2: AI): "))
-#     game = Connect4Board(first_player=first_p)
-
-#     try:
-#         while not game.isEnd:
-#             game.showBoard()
-#             hw.off_all_led()
-            
-#             if game.current_turn == 1: # ตาเรา (Human)
-#                 print(">>> YOUR TURN: Input column in console, drop coin, THEN push button.")
-#                 update_oled(device, f"ROUND {game.round}", "YOUR TURN\nInput & Push")
-                
-#                 col = int(input("Enter column (0-6): "))
-#                 if col not in game.validAction():
-#                     print("Invalid column!")
-#                     continue
-                
-#                 # จำลองการหยอดหมาก
-#                 game.insertColumn(col)
-#                 hw.wait_push() # รอเรากดปุ่มเพื่อยืนยันว่าหยอดแล้วและเปลี่ยนตา
-                
-#             else: # ตา AI
-#                 print("AI is thinking...")
-#                 update_oled(device, "AI THINKING...", "Processing...")
-                
-#                 # AI คำนวณ
-#                 policy = ai_brain.predict(game)
-#                 valid_actions = game.validAction()
-#                 masked_policy = np.full(policy.shape, -np.inf)
-#                 masked_policy[valid_actions] = policy[valid_actions]
-#                 move = np.argmax(masked_policy)
-                
-#                 # แสดงผลทาง Hardware
-#                 print(f"AI RECOMMENDS: Column {move}")
-#                 hw.on_led(move) # เปิดไฟคอลัมน์ที่แนะนำ
-#                 update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move)
-                
-#                 # รอเราหยอดให้ AI และกดปุ่มเปลี่ยนตา
-#                 hw.wait_push()
-#                 game.insertColumn(move)
-
-#         # จบเกม
-#         game.showBoard()
-#         winner_text = "YOU WON!" if game.winner == 1 else "AI WON!"
-#         if game.winner == 0: winner_text = "DRAW!"
-        
-#         print(f"GAME OVER: {winner_text}")
-#         update_oled(device, "GAME OVER", winner_text)
-#         hw.show_winner(game.winner)
-
-#     except KeyboardInterrupt:
-#         hw.cleanup()
-
-# if __name__ == "__main__":
-#     run_test()
-
-
-
-
 
 
 import os
@@ -109,15 +15,6 @@ from luma.oled.device import sh1106
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from Reinforcement.players.ZeroPlayer import TRTPlayer
-
-# def update_oled(device, title, msg, col=None, conf=None):
-#     with canvas(device) as draw:
-#         draw.text((5, 5), title, fill="white")
-#         draw.text((5, 20), msg, fill="white")
-#         if col is not None:
-#             draw.rectangle((40, 35, 80, 60), outline="white")
-#             # เปลี่ยน f-string เป็น .format() เพื่อรองรับ Python 3.6 รุ่นเก่า
-#             draw.text((48, 42), "C{}".format(col), fill="white")
 
 def update_oled(device, title, msg, col=None, conf=None):
     with canvas(device) as draw:
@@ -216,7 +113,7 @@ def run_test():
 
 
             else: # AI
-                # --- ส่วนเดิม: AI คำนวณแบบสัญชาตญาณ (Predict Direct) ---
+                # --- previous direct-predict path ---
                 # update_oled(device, "AI THINKING...", "Processing...")
                 # print("AI is calculating...")
                 # policy, value = ai_brain.predict(game)
@@ -226,19 +123,19 @@ def run_test():
                 # masked_policy[valid_actions] = policy[valid_actions]
                 # move = int(np.argmax(masked_policy))
 
-                # --- ส่วนใหม่: AI คำนวณแบบคิดล่วงหน้า (MCTS Search) ---
+                # --- current path: AI uses MCTS search ---
                 update_oled(device, "AI THINKING...", "Searching")
                 print("AI is calculating with MCTS...")
-                
-                # เรียกใช้ MCTS ผ่านตัวแปร ZeroAI_MCTS (ที่ต้องประกาศไว้ตอนต้นของฟังก์ชัน run_test)
+
+                # use MCTS via ZeroAI_MCTS defined at the start of run_test
                 move, mcts_policy = ZeroAI_MCTS.act(game, tau=0)
-                
-                # ดึงค่า Value ปัจจุบันมาแสดงผล % บนหน้าจอ OLED
+
+                # get current value estimate and display win probability
                 _, value = ai_brain.predict(game)
                 ai_win_percent = (value + 1) / 2 * 100
                 # --------------------------------------------------
 
-                # Display Hardware (ส่วนแสดงผลใช้ตัวแปร move และ ai_win_percent เดิมได้เลย)
+                # Display Hardware (can keep using move and ai_win_percent)
                 print("AI RECOMMENDS: Column {}".format(move))
                 print("AI Confidence: {:.2f}%".format(ai_win_percent))
                 
@@ -246,7 +143,7 @@ def run_test():
                 hw.on_led(move) 
                 # update_oled(device, "AI SUGGESTS", "Drop & Push", col=move, conf=ai_win_percent) 
                 update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move, conf=ai_win_percent)
-                # ส่วนรอรับ Input จากมนุษย์คงเดิม
+                # wait for the human to drop AI's move and confirm with the button
                 success = False
                 while not success:
                     try:

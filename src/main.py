@@ -5,19 +5,19 @@ import time
 
 os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
 # sys.path.append(os.path.join(os.getcwd(), 'src'))
-# --- ปรับปรุงส่วนนี้เพื่อให้รันได้ทั้งในและนอก src ---
-# หาตำแหน่งของไฟล์นี้
+# Adjust path resolution so this file can run both inside src/ and from the repo root
+# Find this file's location
 current_file_path = os.path.abspath(__file__)
-# หาตำแหน่งโฟลเดอร์ c4bot (Root)
-# ถ้าอยู่ใน src/ โฟลเดอร์หลักคือ dirname ของ dirname
-# ถ้าอยู่ Root โฟลเดอร์หลักคือ dirname
+# Find root c4bot folder
+# If running from src/, root is dirname(dirname(current_file_path))
+# If running from root, root is dirname(current_file_path)
 base_dir = os.path.dirname(current_file_path)
 if os.path.basename(base_dir) == 'src':
     base_dir = os.path.dirname(base_dir)
 
 src_path = os.path.join(base_dir, 'src')
 
-# เพิ่ม Path เข้าไปเพื่อให้ import module อื่นๆ เจอ
+# Add src path so imports work for other modules
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 # ----------------------------------------------
@@ -31,53 +31,19 @@ from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from Reinforcement.players.ZeroPlayer import TRTPlayer
 
-# def update_oled(device, title, msg, col=None):
-#     with canvas(device) as draw:
-#         draw.text((5, 5), title, fill="white")
-#         draw.text((5, 20), msg, fill="white")
-        
-#         if col is not None:
-#             draw.rectangle((40, 35, 80, 60), outline="white")
-#             draw.text((48, 42), "C{}".format(col), fill="white")
-
 def update_oled(device, title, msg, col=None, win_chance=None):
     with canvas(device) as draw:
         draw.text((5, 5), title, fill="white")
         draw.text((5, 20), msg, fill="white")
         
-        # ถ้ามีค่าโอกาสชนะ ให้แสดงเป็น % ที่มุมขวาล่าง
+        # If AI win probability exists, display it as a percentage
         if win_chance is not None:
             draw.text((5, 45), f"AI Win: {win_chance:.1f}%", fill="white")
             
         if col is not None:
-            draw.rectangle((85, 35, 120, 60), outline="white") # ขยับกรอบหลบตัวเลข
+            draw.rectangle((85, 35, 120, 60), outline="white")  # shift the box to avoid the score text
             draw.text((93, 42), "C{}".format(col), fill="white")
 
-# def run_main():
-#     # 1. Setup All Modules
-#     hw = GPIO_Module()
-#     vision = Image_Processing()
-#     engine_path = "src/Reinforcement/Models/model_v6.engine"
-#     ai_brain = TRTBrainWrapper(engine_path)
-    
-#     serial = i2c(port=1, address=0x3C)
-#     device = sh1106(serial)
-
-#     # 2. เริ่มเกม
-#     print("--- C4BOT VISION MAIN GAME ---")
-#     try:
-#         first_p = int(input("Who starts first? (1: Human, 2: AI): "))
-#     except ValueError:
-#         first_p = 1
-        
-#     game = Connect4Board(first_player=first_p)
-
-#     try:
-#         while not game.isEnd:
-#             hw.off_all_led()
-            
-#             if game.current_turn == 1: # --- ตาเรา (Human) ---
-#                 print("\n>>> YOUR TURN")
 #                 update_oled(device, "ROUND {}".format(game.round), "YOUR TURN\nDrop & Push")
 #                 hw.wait_push()
                 
@@ -240,7 +206,7 @@ def run_main():
             #     game.round += 1
 
             else: # AI turn
-                # --- โค้ดเก่า (Direct Predict) ---
+                # --- Legacy direct prediction code ---
                 # print("\n>>> AI THINKING...")
                 # update_oled(device, "AI THINKING...", "Processing...")
                 # policy, value = ai_brain.predict(game)
@@ -250,14 +216,14 @@ def run_main():
                 # masked_policy[valid_actions] = policy[valid_actions]
                 # move = int(np.argmax(masked_policy))
                 
-                # --- โค้ดใหม่ (ใช้ MCTS ผ่าน TRTPlayer) ---
+                # --- New code using MCTS via TRTPlayer ---
                 print("\n>>> AI THINKING (Search)...")
                 update_oled(device, "AI THINKING...", "Searching")
                 
-                # เรียกใช้ MCTS Search 400 รอบ (ZeroAI คืออินสแตนซ์ของ TRTPlayer)
+                # Run 400 rounds of MCTS search with ZeroAI
                 move, mcts_policy = ZeroAI.act(game, tau=0) 
                 
-                # ยังคงดึงค่า Value จากการ Predict สถานะปัจจุบันเพื่อโชว์ % โอกาสชนะบน OLED
+                # Also get the current state value for showing win probability on OLED
                 _, value = ai_brain.predict(game)
                 ai_win_percent = (1 + value) / 2 * 100
                 # ---------------------------------------
@@ -265,7 +231,7 @@ def run_main():
                 print(f"AI Win Chance: {ai_win_percent:.1f}%")
                 print(f"AI RECOMMENDS: Column {move}")
                 
-                # แสดงผลบน OLED และเปิดไฟ LED
+                # Display the result on OLED and light the chosen LED
                 update_oled(device, "AI SUGGESTS:", "Drop for AI\n& Push", col=move, win_chance=ai_win_percent)
                 hw.on_led(move) 
                 

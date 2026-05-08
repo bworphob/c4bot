@@ -88,11 +88,6 @@ This is the full system flow with camera, GPIO, OLED, and TensorRT inference.
 
 Note: `sudo` is required for GPIO/Hardware access
 
-## Implementation notes
-
-- `src/GameBoard/GameBoard.py` encodes board state with `getStateAsPlayer()` as: current player pieces, opponent pieces, and a turn indicator plane.
-- `src/ImageProcess/Image_Processing.py` maps detected colors in `scan_board()` as: `2 = yellow coin`, `1 = red coin`, and `0 = empty slot`.
-
 ## Example test
 
 ### 5. Test game rule logic
